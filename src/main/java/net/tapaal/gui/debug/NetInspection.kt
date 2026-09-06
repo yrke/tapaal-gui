@@ -26,8 +26,75 @@ data class InspectionNode(
     val label: String,
     val value: String? = null,
     val children: List<InspectionNode> = emptyList(),
+    val key: String = "",
 ) {
     fun displayText(): String = if (value == null) label else "$label: $value"
+}
+
+/** Assigns stable, snapshot-local paths used by the inspector view. */
+fun InspectionNode.withStableKeys(): InspectionNode {
+    fun assign(node: InspectionNode, path: String): InspectionNode {
+        val childOccurrences = mutableMapOf<String, Int>()
+        val children = node.children.map { child ->
+            val segment = if (child.value != null && child.children.isNotEmpty()) {
+                "${child.label}=${child.value}"
+            } else {
+                child.label
+            }
+            val occurrence = childOccurrences.merge(segment, 1, Int::plus)!! - 1
+            assign(child, "$path/$segment#$occurrence")
+        }
+        return node.copy(key = path, children = children)
+    }
+
+    return assign(this, if (key.isEmpty()) "root" else key)
+}
+
+/** Compares two immutable snapshots without retaining any model or Swing objects. */
+object InspectionSnapshotDiff {
+    fun changedKeys(previous: InspectionNode, current: InspectionNode): Set<String> {
+        val previousValues = valuesByKey(previous)
+        return valuesByKey(current).asSequence()
+            .filter { (key, value) -> previousValues[key] != value }
+            .map { (key, _) -> key }
+            .toSet()
+    }
+
+    private fun valuesByKey(root: InspectionNode): Map<String, String> {
+        val values = mutableMapOf<String, String>()
+        fun visit(node: InspectionNode) {
+            if (node.key.isNotEmpty()) values[node.key] = node.displayText()
+            node.children.forEach(::visit)
+        }
+        visit(root)
+        return values
+    }
+}
+
+/** Mutable UI choices kept separately from the immutable inspection snapshots. */
+class InspectionViewState {
+    private val expandedNodeKeys = linkedSetOf<String>()
+    private val pinnedNodeKeys = linkedSetOf<String>()
+
+    fun setExpanded(key: String, expanded: Boolean) {
+        if (expanded) expandedNodeKeys += key else expandedNodeKeys -= key
+    }
+
+    fun expandedKeys(): Set<String> = expandedNodeKeys.toSet()
+
+    fun pin(key: String) {
+        if (key.isNotEmpty()) pinnedNodeKeys += key
+    }
+
+    fun unpin(key: String) {
+        pinnedNodeKeys -= key
+    }
+
+    fun clearPins() {
+        pinnedNodeKeys.clear()
+    }
+
+    fun pinnedKeys(): List<String> = pinnedNodeKeys.toList()
 }
 
 /** Builds an inspection snapshot from the model, never from editor widgets. */
@@ -37,7 +104,7 @@ object NetInspectionSnapshot {
             root.copy(
                 value = tab.getTabTitle(),
                 children = listOf(simulationNode(tab)) + root.children,
-            )
+            ).withStableKeys()
         }
 
     fun capture(
@@ -80,7 +147,7 @@ object NetInspectionSnapshot {
         children += section("Templates", network.allTemplates().map { guarded("Template") { templateNode(it) } })
         children += section("Queries", queries.map { guarded("Query") { queryNode(it) } }.toList())
 
-        return InspectionNode("Net", children = children)
+        return InspectionNode("Net", children = children).withStableKeys()
     }
 
     private fun templateNode(template: TimedArcPetriNet): InspectionNode {
