@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.function.ThrowingSupplier
+import pipe.gui.petrinet.graphicElements.tapn.TimedInhibitorArcComponent
 import pipe.gui.petrinet.graphicElements.tapn.TimedPlaceComponent
 import java.math.BigDecimal
 
@@ -406,6 +407,19 @@ internal class TapnXmlLoaderTest {
 
     @Tag("gui")
     class InhibitorArc {
+        @Test
+        fun `Any color expression is not shown on inhibitor arc`() {
+            val loaded = TapnXmlLoader().load(
+                javaClass.getResource("/Example nets/fireflies.tapn")!!.openStream()
+            )
+            val inhibitor = loaded.templates().first().guiModel().arcs
+                .filterIsInstance<TimedInhibitorArcComponent>()
+                .single { it.source.name == "firing" && it.target.name == "fire_alone" }
+
+            Assertions.assertEquals("1'dot.all", inhibitor.expression.toString())
+            Assertions.assertEquals("", inhibitor.nameLabel.text)
+        }
+
         @Test
         fun `Inhibitor Arc`() {
             val net = xmlNet(

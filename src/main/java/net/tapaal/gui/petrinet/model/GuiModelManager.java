@@ -3,6 +3,9 @@ package net.tapaal.gui.petrinet.model;
 import dk.aau.cs.verification.observations.Observation;
 import net.tapaal.gui.petrinet.undo.*;
 import pipe.gui.petrinet.PetriNetTab;
+import dk.aau.cs.model.CPN.ColorType;
+import dk.aau.cs.model.CPN.Expressions.ColorExpression;
+import dk.aau.cs.model.CPN.Expressions.NumberOfExpression;
 import dk.aau.cs.model.tapn.*;
 import dk.aau.cs.util.Require;
 import org.jetbrains.annotations.NotNull;
@@ -181,6 +184,7 @@ public class GuiModelManager {
         TimedInhibitorArc tiha = modelEditor.createInhibitorArc(p.underlyingPlace(), t.underlyingTransition());
 
         TimedInhibitorArcComponent tihac = new TimedInhibitorArcComponent(p, t, tiha);
+        tihac.setLens(tabContent.lens);
 
         if (path != null) {
             tihac.setArcPath(new ArcPath(tihac, path));

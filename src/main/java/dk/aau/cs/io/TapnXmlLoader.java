@@ -827,7 +827,7 @@ public class TapnXmlLoader {
             if (age.signum() < 0) {
                 throw new FormatException("Initial token ages must be nonnegative.");
             }
-            
+
             return age;
         } catch (NumberFormatException e) {
             throw new FormatException("Invalid initial token age in place " + place.getAttribute("name") + ".", e);
@@ -890,10 +890,17 @@ public class TapnXmlLoader {
         ArcExpression arcExpr = null;
         List<ColoredTimeInterval> ctiList = new ArrayList<ColoredTimeInterval>();
         Node hlInscription = getFirstDirectChild(arc, "hlinscription");
-        if (hlInscription != null)
+        if (hlInscription != null) {
             hlInscription = getFirstDirectChild(hlInscription, "structure");
-        if (hlInscription != null)
-            arcExpr = loadTACPN.parseArcExpression(hlInscription);
+            Node expression = hlInscription == null ? null : hlInscription.getFirstChild();
+            while (expression != null && !(expression instanceof Element)) {
+                expression = expression.getNextSibling();
+            }
+
+            if (expression != null) {
+                arcExpr = loadTACPN.parseArcExpression(hlInscription);
+            }
+        }
 
         NodeList intervalNodes = arc.getElementsByTagName("colorinterval");
         if (intervalNodes != null) {
