@@ -1053,8 +1053,8 @@ public class WorkflowDialog extends JDialog {
 							+ MemoryMonitor.getPeakMemory());
 					strongSoundnessVerificationStats.setVisible(true);
 
-					pack();
-				});
+						pack();
+					}, tab);
 			}
 		};
 	}
@@ -1256,8 +1256,8 @@ public class WorkflowDialog extends JDialog {
                             for(TAPNNetworkTraceStep step : trace){
                                 ((TimedTAPNNetworkTrace) soundnessResultTrace).add(step);
                             }
-                        }
-                    });
+				}
+			}, tab);
 
                 }
 
@@ -1288,7 +1288,7 @@ public class WorkflowDialog extends JDialog {
 
                     return output;
                 }
-            });
+            }, tab);
         };
 	}
 

@@ -242,7 +242,11 @@ public class Verifier {
     }
 
     public static void runVerifyTAPNVerification(TimedArcPetriNetNetwork tapnNetwork, TAPNQuery query, VerificationCallback callback) {
-        runVerifyTAPNVerification(tapnNetwork, query, callback, null, false, null);
+        runVerifyTAPNVerification(tapnNetwork, query, callback, null, false, null, null);
+    }
+
+    public static void runVerifyTAPNVerification(TimedArcPetriNetNetwork tapnNetwork, TAPNQuery query, VerificationCallback callback, PetriNetTab tab) {
+        runVerifyTAPNVerification(tapnNetwork, query, callback, null, false, null, tab);
     }
 
     public static void runVerifyTAPNVerification(
@@ -252,6 +256,17 @@ public class Verifier {
         HashMap<TimedArcPetriNet, DataLayer> guiModels,
         boolean onlyCreateReducedNet,
         TAPNLens lens) {
+        runVerifyTAPNVerification(tapnNetwork, query, callback, guiModels, onlyCreateReducedNet, lens, null);
+    }
+
+    public static void runVerifyTAPNVerification(
+        TimedArcPetriNetNetwork tapnNetwork,
+        TAPNQuery query,
+        VerificationCallback callback,
+        HashMap<TimedArcPetriNet, DataLayer> guiModels,
+        boolean onlyCreateReducedNet,
+        TAPNLens lens,
+        PetriNetTab tab) {
         query = convertQuery(query, lens, tapnNetwork);
         ModelChecker verifytapn = getModelChecker(query);
 
@@ -276,14 +291,14 @@ public class Verifier {
         if (tapnNetwork != null) {
             RunVerificationBase thread;
             if (reducedNetTempFile != null) {
-                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels, getReducedNetFilePath(), onlyCreateReducedNet);
+                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels, getReducedNetFilePath(), onlyCreateReducedNet, tab != null ? tab : RunVerificationBase.findOwnerTab(guiModels).orElse(null));
             } else {
-                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels);
+                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels, null, false, tab != null ? tab : RunVerificationBase.findOwnerTab(guiModels).orElse(null));
             }
 
             RunningVerificationDialog dialog = new RunningVerificationDialog(TAPAALGUI.getApp(), thread);
             if (isColored && query.getTraceOption() != TAPNQuery.TraceOption.NONE) {
-                SmartDrawDialog.setupWorkerListener(thread, RunVerificationBase.findOwnerTab(guiModels).orElse(null));
+                SmartDrawDialog.setupWorkerListener(thread, tab != null ? tab : RunVerificationBase.findOwnerTab(guiModels).orElse(null));
             }
             thread.execute(verifytapnOptions, tapnNetwork, new dk.aau.cs.model.tapn.TAPNQuery(query.getProperty(), query.getCapacity(), query.getSmcSettings()), query, lens);
             dialog.setVisible(true);
@@ -402,6 +417,17 @@ public class Verifier {
         HashMap<TimedArcPetriNet, DataLayer> guiModels,
         boolean onlyCreateReducedNet,
         TAPNLens lens) {
+        return runVerifyTAPNSilent(tapnNetwork, query, callback, guiModels, onlyCreateReducedNet, lens, null);
+    }
+
+    public static RunVerificationBase runVerifyTAPNSilent(
+        TimedArcPetriNetNetwork tapnNetwork,
+        TAPNQuery query,
+        VerificationCallback callback,
+        HashMap<TimedArcPetriNet, DataLayer> guiModels,
+        boolean onlyCreateReducedNet,
+        TAPNLens lens,
+        PetriNetTab tab) {
         query = convertQuery(query, lens);
         ModelChecker verifytapn = getModelChecker(query);
 
@@ -426,13 +452,13 @@ public class Verifier {
         if (tapnNetwork != null) {
             RunVerificationBase thread;
             if (reducedNetTempFile != null) {
-                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels, getReducedNetFilePath(), onlyCreateReducedNet);
+                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels, getReducedNetFilePath(), onlyCreateReducedNet, tab != null ? tab : RunVerificationBase.findOwnerTab(guiModels).orElse(null));
             } else {
-                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels);
+                thread = new RunVerification(verifytapn, new VerifyTAPNIconSelector(), new MessengerImpl(), callback, guiModels, null, false, tab != null ? tab : RunVerificationBase.findOwnerTab(guiModels).orElse(null));
             }
 
             if (isColored && query.getTraceOption() != TAPNQuery.TraceOption.NONE) {
-                SmartDrawDialog.setupWorkerListener(thread, RunVerificationBase.findOwnerTab(guiModels).orElse(null));
+                SmartDrawDialog.setupWorkerListener(thread, tab != null ? tab : RunVerificationBase.findOwnerTab(guiModels).orElse(null));
             }
             thread.execute(verifytapnOptions, tapnNetwork, new dk.aau.cs.model.tapn.TAPNQuery(query.getProperty(), query.getCapacity(), query.getSmcSettings()), query, lens);
             return thread;

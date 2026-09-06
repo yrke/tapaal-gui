@@ -31,10 +31,14 @@ import static net.tapaal.swinghelpers.GridBagHelper.Anchor.WEST;
 
 public class RunVerification extends RunVerificationBase {	
 	private final IconSelector iconSelector;
-	private final VerificationCallback callback;
+    private final VerificationCallback callback;
 
-	public RunVerification(ModelChecker modelChecker, IconSelector selector, Messenger messenger, VerificationCallback callback, HashMap<TimedArcPetriNet, DataLayer> guiModels, String reducedNetFilePath, boolean reduceNetOnly) {
-		super(modelChecker, messenger, guiModels, reducedNetFilePath, reduceNetOnly, null);
+    public RunVerification(ModelChecker modelChecker, IconSelector selector, Messenger messenger, VerificationCallback callback, HashMap<TimedArcPetriNet, DataLayer> guiModels, String reducedNetFilePath, boolean reduceNetOnly) {
+        this(modelChecker, selector, messenger, callback, guiModels, reducedNetFilePath, reduceNetOnly, findOwnerTab(guiModels).orElse(null));
+    }
+
+    public RunVerification(ModelChecker modelChecker, IconSelector selector, Messenger messenger, VerificationCallback callback, HashMap<TimedArcPetriNet, DataLayer> guiModels, String reducedNetFilePath, boolean reduceNetOnly, PetriNetTab ownerTab) {
+        super(modelChecker, messenger, guiModels, reducedNetFilePath, reduceNetOnly, null, ownerTab);
 		iconSelector = selector;
 		this.callback = callback;
 	}

@@ -7206,7 +7206,7 @@ public class QueryDialog extends JPanel {
 
                     exit();
                    
-                    Verifier.runVerifyTAPNVerification(tapnNetwork, query,null, guiModels, true, null);
+                    Verifier.runVerifyTAPNVerification(tapnNetwork, query,null, guiModels, true, null, tab);
 
                     File reducedNetFile = new File(Verifier.getReducedNetFilePath());
 
@@ -7519,10 +7519,10 @@ public class QueryDialog extends JPanel {
                 }
             };
             
-            benchmarkThread = Verifier.runVerifyTAPNSilent(tapnNetwork, query, callback2, guiModels, false, lens);
+            benchmarkThread = Verifier.runVerifyTAPNSilent(tapnNetwork, query, callback2, guiModels, false, lens, tab);
         };
        
-        benchmarkThread = Verifier.runVerifyTAPNSilent(tapnNetwork, query, callback1, guiModels,false, lens);
+        benchmarkThread = Verifier.runVerifyTAPNSilent(tapnNetwork, query, callback1, guiModels,false, lens, tab);
     }
 
     private void updateFieldsOnBenchmark() {
