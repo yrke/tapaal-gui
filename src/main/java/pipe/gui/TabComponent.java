@@ -48,9 +48,11 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JToolTip;
 
 import dk.aau.cs.util.Require;
 import pipe.gui.petrinet.PetriNetTab;
+import net.tapaal.gui.swingcomponents.MultiLineAutoWrappingToolTip;
 
 /**
  * This class represents the component inside the "head" of a tab. That is, it
@@ -59,8 +61,7 @@ import pipe.gui.petrinet.PetriNetTab;
  * 
  */
 public abstract class TabComponent extends JPanel {
-
-	private static final int MAX_TAB_TITLE_WIDTH = 200;
+	private static final int MAX_TAB_TITLE_WIDTH = 400;
 
 	private final JTabbedPane pane;
 
@@ -93,7 +94,13 @@ public abstract class TabComponent extends JPanel {
 
 			@Override
 			public String getToolTipText(MouseEvent event) {
-				return getText();
+				String title = getText();
+				return title != null && super.getPreferredSize().width > getWidth() ? title : null;
+			}
+
+			@Override
+			public JToolTip createToolTip() {
+				return new MultiLineAutoWrappingToolTip();
 			}
 		};
 
