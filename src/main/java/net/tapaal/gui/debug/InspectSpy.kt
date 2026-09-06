@@ -18,7 +18,9 @@ import javax.swing.JButton
 import javax.swing.JFrame
 import javax.swing.JComponent
 import javax.swing.JLabel
+import javax.swing.JMenuItem
 import javax.swing.JPanel
+import javax.swing.JPopupMenu
 import javax.swing.JScrollPane
 import javax.swing.JSplitPane
 import javax.swing.JTextField
@@ -33,6 +35,8 @@ import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 import java.util.WeakHashMap
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 
 /** Tree renderer that preserves the inspector's compact, readable labels. */
 internal class InspectionTreeCellRenderer(
@@ -91,6 +95,21 @@ class InspectSpy private constructor(
     private val searchField = JTextField(24)
     private val statusLabel = JLabel()
     private val pinnedPanel = JPanel()
+    private var contextMenuNodeKey: String? = null
+
+    private val pinContextAction = object : AbstractAction("Pin node") {
+        override fun actionPerformed(event: ActionEvent?) {
+            contextMenuNodeKey?.let { key ->
+                viewState.togglePin(key)
+                renderPinnedNodes()
+                updateSelectionControls()
+            }
+        }
+    }
+
+    private val treeContextMenu = JPopupMenu().apply {
+        add(JMenuItem(pinContextAction))
+    }
 
     private val reloadButton = JButton(object : AbstractAction("Reload") {
         override fun actionPerformed(event: ActionEvent?) {
@@ -146,6 +165,10 @@ class InspectSpy private constructor(
             selectedNodeKey = selectedInspectionNode()?.key
             updateSelectionControls()
         }
+        tree.addMouseListener(object : MouseAdapter() {
+            override fun mousePressed(event: MouseEvent?) = showContextMenu(event)
+            override fun mouseReleased(event: MouseEvent?) = showContextMenu(event)
+        })
         tree.addTreeExpansionListener(object : TreeExpansionListener {
             override fun treeExpanded(event: TreeExpansionEvent?) {
                 if (trackExpansionChanges) expansionKey(event)?.let { viewState.setExpanded(it, true) }
@@ -286,6 +309,18 @@ class InspectSpy private constructor(
             renderPinnedNodes()
             updateSelectionControls()
         }
+    }
+
+    private fun showContextMenu(event: MouseEvent?) {
+        if (event == null || !event.isPopupTrigger) return
+        val path = tree.getPathForLocation(event.x, event.y) ?: return
+        tree.selectionPath = path
+        val node = (path.lastPathComponent as? DefaultMutableTreeNode)?.userObject as? InspectionNode ?: return
+        contextMenuNodeKey = node.key
+        val pinned = node.key in viewState.pinnedKeys()
+        pinContextAction.putValue(AbstractAction.NAME, if (pinned) "Unpin node" else "Pin node")
+        pinContextAction.isEnabled = node.key.isNotEmpty()
+        treeContextMenu.show(tree, event.x, event.y)
     }
 
     private fun renderPinnedNodes() {

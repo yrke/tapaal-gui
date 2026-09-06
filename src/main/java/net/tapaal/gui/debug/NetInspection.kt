@@ -90,6 +90,16 @@ class InspectionViewState {
         pinnedNodeKeys -= key
     }
 
+    fun togglePin(key: String): Boolean {
+        if (key.isEmpty()) return false
+        return if (pinnedNodeKeys.remove(key)) {
+            false
+        } else {
+            pinnedNodeKeys += key
+            true
+        }
+    }
+
     fun clearPins() {
         pinnedNodeKeys.clear()
     }

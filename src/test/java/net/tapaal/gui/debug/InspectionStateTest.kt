@@ -93,4 +93,14 @@ class InspectionStateTest {
 
         assertEquals(3, tree.rowCount)
     }
+
+    @Test
+    fun `toggle pin adds and removes a node`() {
+        val state = InspectionViewState()
+
+        assertTrue(state.togglePin("root/place-input"))
+        assertEquals(listOf("root/place-input"), state.pinnedKeys())
+        assertTrue(!state.togglePin("root/place-input"))
+        assertTrue(state.pinnedKeys().isEmpty())
+    }
 }
