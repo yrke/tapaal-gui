@@ -55,6 +55,10 @@ internal class InspectionTreeCellRenderer(
                 component.background = Color(255, 241, 168)
                 component.foreground = Color.BLACK
                 (component as? JComponent)?.isOpaque = true
+            } else {
+                component.background = if (selected) backgroundSelectionColor else backgroundNonSelectionColor
+                component.foreground = if (selected) textSelectionColor else textNonSelectionColor
+                (component as? JComponent)?.isOpaque = false
             }
         }
         return component

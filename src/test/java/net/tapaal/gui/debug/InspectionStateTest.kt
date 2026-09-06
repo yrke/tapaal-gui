@@ -1,8 +1,10 @@
 package net.tapaal.gui.debug
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.awt.Color
 import javax.swing.JLabel
 import javax.swing.JTree
 import javax.swing.tree.DefaultMutableTreeNode
@@ -55,6 +57,28 @@ class InspectionStateTest {
             .getTreeCellRendererComponent(JTree(), node, false, false, true, 0, false) as JLabel
 
         assertEquals("Place: input", rendered.text)
+    }
+
+    @Test
+    fun `tree renderer does not carry a changed background to the next row`() {
+        val changed = setOf("root/changed")
+        val renderer = InspectionTreeCellRenderer { changed }
+        val tree = JTree()
+        val changedNode = DefaultMutableTreeNode(InspectionNode("Value", "changed", key = "root/changed"))
+        val unchangedNode = DefaultMutableTreeNode(InspectionNode("Value", "same", key = "root/unchanged"))
+
+        renderer.getTreeCellRendererComponent(tree, changedNode, false, false, true, 0, false)
+        val renderedUnchanged = renderer.getTreeCellRendererComponent(
+            tree,
+            unchangedNode,
+            false,
+            false,
+            true,
+            1,
+            false,
+        ) as JLabel
+
+        assertNotEquals(Color(255, 241, 168), renderedUnchanged.background)
     }
 
     @Test
