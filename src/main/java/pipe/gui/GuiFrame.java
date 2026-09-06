@@ -880,8 +880,10 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         table.setAutoCreateRowSorter(true);
         table.setFillsViewportHeight(true);
         table.setRowHeight(table.getRowHeight() + 4);
-        table.getColumnModel().getColumn(0).setPreferredWidth(360);
-        table.getColumnModel().getColumn(1).setPreferredWidth(180);
+        table.getColumnModel().getColumn(0).setPreferredWidth(130);
+        table.getColumnModel().getColumn(1).setPreferredWidth(220);
+        table.getColumnModel().getColumn(2).setPreferredWidth(150);
+        table.getColumnModel().getColumn(3).setPreferredWidth(360);
 
         JTextField searchField = new JTextField();
         searchField.putClientProperty("JTextField.placeholderText", "Search shortcuts");
@@ -913,7 +915,7 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         content.setBorder(BorderFactory.createEmptyBorder(8, 8, 0, 8));
         content.add(searchPanel, BorderLayout.NORTH);
         content.add(new JScrollPane(table), BorderLayout.CENTER);
-        content.setPreferredSize(new Dimension(600, 440));
+        content.setPreferredSize(new Dimension(900, 440));
 
         JOptionPane.showMessageDialog(GuiFrame.this, content, "Keyboard shortcuts", JOptionPane.INFORMATION_MESSAGE);
     }
@@ -921,22 +923,49 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
     private List<Shortcut> getShortcuts() {
         List<Shortcut> shortcuts = new ArrayList<>();
         for (int i = 0; i < menuBar.getMenuCount(); i++) {
-            collectShortcuts(menuBar.getMenu(i), shortcuts);
+            collectShortcuts(menuBar.getMenu(i), shortcuts, List.of());
         }
         return shortcuts;
     }
 
-    private void collectShortcuts(MenuElement menu, List<Shortcut> shortcuts) {
+    private void collectShortcuts(MenuElement menu, List<Shortcut> shortcuts, List<String> parentPath) {
+        List<String> menuPath = parentPath;
+        if (menu instanceof JMenu submenu) {
+            menuPath = new ArrayList<>(parentPath);
+            menuPath.add(submenu.getText());
+        }
+
         if (menu instanceof JMenuItem item && !(menu instanceof JMenu)) {
             KeyStroke accelerator = item.getAccelerator();
             if (accelerator != null) {
-                shortcuts.add(new Shortcut(item.getText(), formatShortcut(accelerator)));
+                String actionName = item.getText();
+                String description = getShortcutDescription(item, menuPath, actionName);
+                shortcuts.add(new Shortcut(
+                    String.join(" > ", menuPath), actionName, formatShortcut(accelerator), description));
             }
         }
 
         for (MenuElement child : menu.getSubElements()) {
-            collectShortcuts(child, shortcuts);
+            collectShortcuts(child, shortcuts, menuPath);
         }
+    }
+
+    private static String getShortcutDescription(JMenuItem item, List<String> menuPath, String actionName) {
+        Action action = item.getAction();
+        if (action != null) {
+            Object customDescription = action.getValue(GuiAction.SHORTCUT_DESCRIPTION);
+            if (customDescription instanceof String description && !description.isBlank()) {
+                return description;
+            }
+
+            Object tooltip = action.getValue(Action.SHORT_DESCRIPTION);
+            if (tooltip instanceof String description && !description.isBlank() && !description.equals(actionName)) {
+                return description;
+            }
+        }
+
+        String fullName = String.join(" > ", menuPath) + " > " + actionName;
+        return "Keyboard shortcut for " + fullName;
     }
 
     private static String formatShortcut(KeyStroke keyStroke) {
@@ -955,7 +984,7 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         return (mask & (legacyMask | extendedMask)) != 0;
     }
 
-    private record Shortcut(String action, String shortcut) { }
+    private record Shortcut(String menu, String action, String shortcut, String description) { }
 
     private static final class ShortcutTableModel extends AbstractTableModel {
         private final List<Shortcut> shortcuts;
@@ -968,17 +997,29 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         public int getRowCount() { return shortcuts.size(); }
 
         @Override
-        public int getColumnCount() { return 2; }
+        public int getColumnCount() { return 4; }
 
         @Override
         public String getColumnName(int column) {
-            return column == 0 ? "Action" : "Shortcut";
+            return switch (column) {
+                case 0 -> "Menu";
+                case 1 -> "Action";
+                case 2 -> "Shortcut";
+                case 3 -> "Details";
+                default -> "";
+            };
         }
 
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
             Shortcut shortcut = shortcuts.get(rowIndex);
-            return columnIndex == 0 ? shortcut.action() : shortcut.shortcut();
+            return switch (columnIndex) {
+                case 0 -> shortcut.menu();
+                case 1 -> shortcut.action();
+                case 2 -> shortcut.shortcut();
+                case 3 -> shortcut.description();
+                default -> "";
+            };
         }
     }
 
