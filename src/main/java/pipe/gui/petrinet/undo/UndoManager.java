@@ -257,6 +257,7 @@ public class UndoManager {
             setSizeOfBuffer(getSizeOfBuffer() - 1);
             setIndexOfNextAdd(getIndexOfNextAdd() - 1);
         }
+        updateTabChangedState();
         setUndoRedoStatus();
     }
 
@@ -269,7 +270,7 @@ public class UndoManager {
         if (getUndoneEdits() > 0) {
             setUndoneEdits(getUndoneEdits() - 1);
         }
-        
+        updateTabChangedState();
         setUndoRedoStatus();
     }
 
