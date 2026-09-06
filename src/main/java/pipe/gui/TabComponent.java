@@ -148,9 +148,18 @@ public abstract class TabComponent extends JPanel {
 		public void mouseClicked(MouseEvent e) {
 			if (e.getButton() == MouseEvent.BUTTON2) {
 				closeTab();
+			} else if (e.getButton() == MouseEvent.BUTTON1) {
+				selectTab();
 			}
 		}
 	};
+
+	private void selectTab() {
+		int index = pane.indexOfTabComponent(TabComponent.this);
+		if (index != -1) {
+			pane.setSelectedIndex(index);
+		}
+	}
 
 	private static final MouseListener buttonMouseListener = new MouseAdapter() {
 		@Override
