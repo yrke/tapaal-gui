@@ -671,7 +671,9 @@ public class QueryDialog extends JPanel {
         this.lens = lens;
         this.tab = tab;
         inclusionPlaces = queryToCreateFrom == null ? new InclusionPlaces() : queryToCreateFrom.inclusionPlaces();
-        newProperty = queryToCreateFrom == null ? new TCTLPathPlaceHolder() : queryToCreateFrom.getProperty();
+        // The editor mutates this tree while the dialog is open. Keep the
+        // query stored in the tab untouched until the replacement is saved.
+        newProperty = queryToCreateFrom == null ? new TCTLPathPlaceHolder() : queryToCreateFrom.getProperty().copy();
         rootPane = me.getRootPane();
         isNetDegree2 = tapnNetwork.isDegree2();
         highestNetDegree = tapnNetwork.getHighestNetDegree();
