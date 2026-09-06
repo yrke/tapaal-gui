@@ -157,6 +157,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 
     private final Animator animator = new Animator(this);
     private boolean netChanged = false;
+    private boolean nonUndoableChange = false;
 
     @Override
     public boolean getNetChanged() {
@@ -164,7 +165,24 @@ public class PetriNetTab extends JSplitPane implements TabActions {
     }
 
     public void setNetChanged(boolean _netChanged) {
-        netChanged = _netChanged;
+		if (_netChanged) {
+			nonUndoableChange = true;
+		} else {
+			nonUndoableChange = false;
+		}
+		updateNetChanged(_netChanged);
+    }
+
+    public void updateNetChangedFromUndoManager() {
+		updateNetChanged(nonUndoableChange || undoManager.hasAppliedNormalEdits());
+	}
+
+	private void updateNetChanged(boolean changed) {
+		if (netChanged == changed) {
+			return;
+		}
+		netChanged = changed;
+		safeApp.ifPresent(tab -> tab.updatedTabState(this));
     }
     private final NameGenerator nameGenerator = new NameGenerator();
 
