@@ -47,6 +47,12 @@ public class RunVerification extends RunVerificationBase {
         this(modelChecker, selector, messenger, null, null, null, false);
     }
 
+    public RunVerification(ModelChecker modelChecker, IconSelector selector, Messenger messenger, PetriNetTab ownerTab) {
+        super(modelChecker, messenger, null, null, false, null, ownerTab);
+        iconSelector = selector;
+        callback = null;
+    }
+
 	@Override
 	protected boolean showResult(VerificationResult<TAPNNetworkTrace> result) {
         if (reduceNetOnly) {

@@ -221,7 +221,7 @@ public class Verifier {
         }
 
         if (timedArcPetriNetNetwork != null) {
-            RunVerificationBase thread = new RunVerification(verifyta, new UppaalIconSelector(), new MessengerImpl());
+            RunVerificationBase thread = new RunVerification(verifyta, new UppaalIconSelector(), new MessengerImpl(), tab);
             RunningVerificationDialog dialog = new RunningVerificationDialog(TAPAALGUI.getApp(), thread);
             if(timedArcPetriNetNetwork.isColored() && input.getTraceOption() != TAPNQuery.TraceOption.NONE){
                 SmartDrawDialog.setupWorkerListener(thread, tab);

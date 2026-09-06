@@ -683,7 +683,7 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         menuBar.add(buildMenuTools());
 
         if (TAPAAL.IS_DEV) {
-            menuBar.add(DEBUG.buildMenuDEBUG());
+            menuBar.add(DEBUG.buildMenuDEBUG(this::getTabInteraction));
         }
 
         menuBar.add(buildMenuHelp());
