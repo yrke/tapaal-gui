@@ -52,13 +52,19 @@ public abstract class RunVerificationBase extends SwingWorker<VerificationResult
 	protected boolean reducedNetOpened = false;
 	protected final JSpinner spinner;
 	protected final Messenger messenger;
+    private final PetriNetTab ownerTab;
     TAPNLens lens;
 
     public RunVerificationBase(ModelChecker modelChecker, Messenger messenger, HashMap<TimedArcPetriNet, DataLayer> guiModels, String reducedNetFilePath, boolean reduceNetOnly, JSpinner spinner) {
+		this(modelChecker, messenger, guiModels, reducedNetFilePath, reduceNetOnly, spinner, findOwnerTab(guiModels).orElse(null));
+	}
+
+    protected RunVerificationBase(ModelChecker modelChecker, Messenger messenger, HashMap<TimedArcPetriNet, DataLayer> guiModels, String reducedNetFilePath, boolean reduceNetOnly, JSpinner spinner, PetriNetTab ownerTab) {
 		super();
 		this.modelChecker = modelChecker;
 		this.messenger = messenger;
 		this.guiModels = guiModels;
+		this.ownerTab = ownerTab;
 		this.reducedNetFilePath = reducedNetFilePath;
 		this.reduceNetOnly = reduceNetOnly;
         this.spinner = spinner;
@@ -270,9 +276,10 @@ public abstract class RunVerificationBase extends SwingWorker<VerificationResult
 	}
 
 	protected Optional<PetriNetTab> getOwnerTab() {
-		if (guiModel != null && guiModel.getOwnerTab() != null) {
-			return Optional.of(guiModel.getOwnerTab());
-		}
+		return Optional.ofNullable(ownerTab);
+	}
+
+	static Optional<PetriNetTab> findOwnerTab(HashMap<TimedArcPetriNet, DataLayer> guiModels) {
 		if (guiModels == null) {
 			return Optional.empty();
 		}

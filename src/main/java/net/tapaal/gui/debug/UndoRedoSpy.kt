@@ -23,7 +23,7 @@ class UndoRedoSpy : JFrame() {
         val m = tree.model as DefaultTreeModel
         treeRoot.removeAllChildren()
 
-        val undoManager = TAPAALGUI.getAppGuiController().getCurrentTab().orElseThrow().undoManager
+        val undoManager = TAPAALGUI.getAppGui().getTabInteraction().getCurrentTab().orElseThrow().undoManager
         
         // Normal edits
         val normalEditsField = UndoManager::class.java.getDeclaredField("normalEdits")

@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import net.tapaal.gui.petrinet.Template;
 import net.tapaal.gui.GuiFrameController;
+import net.tapaal.gui.TabInteraction;
 import pipe.gui.GuiFrame;
 import pipe.gui.petrinet.graphicElements.tapn.TimedPlaceComponent;
 
@@ -65,17 +66,28 @@ class PetriNetTabSmokeTest {
         SwingUtilities.invokeAndWait(() -> {
             GuiFrame frame = new GuiFrame("test");
             GuiFrameController controller = new GuiFrameController(frame);
+            TabInteraction interaction = controller;
             PetriNetTab tab = PetriNetTab.createNewEmptyTab("owner.tapn", true, false, false, false);
+            PetriNetTab secondTab = PetriNetTab.createNewEmptyTab("second.tapn", true, false, false, false);
 
-            assertTrue(controller.getCurrentTab().isEmpty());
+            assertTrue(interaction.getCurrentTab().isEmpty());
             controller.openTab(tab);
 
-            assertEquals(tab, controller.getCurrentTab().orElseThrow());
+            assertEquals(tab, interaction.getCurrentTab().orElseThrow());
             assertEquals(tab, tab.getModel().getOwnerTab());
             assertEquals(tab, tab.currentTemplate().guiModel().getOwnerTab());
 
+            controller.openTab(secondTab);
+            assertEquals(secondTab, interaction.getCurrentTab().orElseThrow());
+            controller.changeToTab(tab);
+            assertEquals(tab, interaction.getCurrentTab().orElseThrow());
+            controller.changeToTab(secondTab);
+            assertEquals(secondTab, interaction.getCurrentTab().orElseThrow());
+
+            controller.closeTab(secondTab);
+            assertEquals(tab, interaction.getCurrentTab().orElseThrow());
             controller.closeTab(tab);
-            assertTrue(controller.getCurrentTab().isEmpty());
+            assertTrue(interaction.getCurrentTab().isEmpty());
             frame.dispose();
         });
     }

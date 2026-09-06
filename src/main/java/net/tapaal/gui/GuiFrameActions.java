@@ -45,6 +45,8 @@ public interface GuiFrameActions {
 
     void registerController(GuiFrameControllerActions guiFrameController);
 
+    void registerTabInteraction(TabInteraction tabInteraction);
+
     void changeToTab(PetriNetTab tab);
 
     //Actions for controller

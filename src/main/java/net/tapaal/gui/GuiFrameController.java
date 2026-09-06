@@ -37,7 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public final class GuiFrameController implements GuiFrameControllerActions{
+public final class GuiFrameController implements GuiFrameControllerActions, TabInteraction{
 
     final GuiFrame guiFrameDirectAccess; //XXX - while refactoring should only use guiFrameActions
     final GuiFrameActions guiFrame;
@@ -54,6 +54,7 @@ public final class GuiFrameController implements GuiFrameControllerActions{
         loadPreferences();
         SimulationControl.setCurrentTabProvider(this::getCurrentTab);
         appGui.registerController(this);
+        appGui.registerTabInteraction(this);
     }
 
     //XXX should be private and should prop. live in controllers not GUI, tmp while refactoring //kyrke 2019-11-05

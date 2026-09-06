@@ -65,6 +65,7 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
     private final String frameTitle;
 
     final MutableReference<GuiFrameControllerActions> guiFrameController = new MutableReference<>();
+    private final MutableReference<TabInteraction> tabInteraction = new MutableReference<>();
 
     private final ExtendedJTabbedPane<PetriNetTab> appTab;
 
@@ -1580,9 +1581,18 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         this.guiFrameController.setReference(guiFrameController);
     }
 
+    @Override
+    public void registerTabInteraction(TabInteraction tabInteraction) {
+        this.tabInteraction.setReference(tabInteraction);
+    }
+
     private Optional<PetriNetTab> currentTab() {
-        return guiFrameController.map(GuiFrameControllerActions::getCurrentTab)
+        return tabInteraction.map(TabInteraction::getCurrentTab)
             .orElse(Optional.empty());
+    }
+
+    public TabInteraction getTabInteraction() {
+        return tabInteraction.get();
     }
 
     @Override
