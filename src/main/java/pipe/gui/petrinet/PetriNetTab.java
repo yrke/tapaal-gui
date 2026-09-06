@@ -2156,18 +2156,22 @@ public class PetriNetTab extends JSplitPane implements TabActions {
     @Override
     public void increaseSpacing() {
 		double factor = 1.25;
-		changeSpacing(factor);
-		getUndoManager().addNewEdit(new ChangeSpacingEditCommand(factor, this));
+		Map<PetriNetObject, Point> before = captureGuiObjectLocations();
+		if (changeSpacing(factor)) {
+			getUndoManager().addNewEdit(new ChangeSpacingEditCommand(before, captureGuiObjectLocations(), this));
+		}
     }
 
 	@Override
 	public void decreaseSpacing() {
 		double factor = 0.8;
-		changeSpacing(factor);
-		getUndoManager().addNewEdit(new ChangeSpacingEditCommand(factor, this));
+		Map<PetriNetObject, Point> before = captureGuiObjectLocations();
+		if (changeSpacing(factor)) {
+			getUndoManager().addNewEdit(new ChangeSpacingEditCommand(before, captureGuiObjectLocations(), this));
+		}
 	}
 
-	public void changeSpacing(double factor) {
+	public boolean changeSpacing(double factor) {
         if (factor < 1) {
             Quadtree quadtree = new Quadtree();
             final int minimumDistance = 45;
@@ -2178,7 +2182,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
                     int newX = (int)(((PlaceTransitionObject)obj).getCenter().getX() * factor);
                     int newY = (int)(((PlaceTransitionObject)obj).getCenter().getY() * factor);
                     Point newLocation = new Point(newX, newY);
-                    if (quadtree.containsWithin(newLocation, minimumDistance)) return;
+					if (quadtree.containsWithin(newLocation, minimumDistance)) return false;
                     quadtree.insert(newLocation);
                 }
             }
@@ -2233,6 +2237,27 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 		}
 
 		this.currentTemplate().guiModel().repaintAll(true);
+		drawingSurface().updatePreferredSize();
+		return true;
+	}
+
+	public Map<PetriNetObject, Point> captureGuiObjectLocations() {
+		Map<PetriNetObject, Point> locations = new HashMap<>();
+		for (PetriNetObject object : currentTemplate().guiModel().getPetriNetObjectsWithArcPathPoint()) {
+			locations.put(object, new Point(object.getPositionX(), object.getPositionY()));
+		}
+		return locations;
+	}
+
+	public void restoreGuiObjectLocations(Map<PetriNetObject, Point> locations) {
+		for (Map.Entry<PetriNetObject, Point> entry : locations.entrySet()) {
+			PetriNetObject object = entry.getKey();
+			Point location = entry.getValue();
+			object.setPositionX(location.x);
+			object.setPositionY(location.y);
+			object.updateOnMoveOrZoom();
+		}
+		currentTemplate().guiModel().repaintAll(true);
 		drawingSurface().updatePreferredSize();
 	}
 
