@@ -4,6 +4,7 @@ import net.tapaal.gui.petrinet.undo.Command;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UndoManagerTest {
@@ -84,5 +85,36 @@ class UndoManagerTest {
         }
 
         assertTrue(undoManager.hasAppliedNormalEdits());
+    }
+
+    @Test
+    void wrappedHistoryCanBeUndoneAndRedoneWithoutOverflowing() {
+        var undoManager = new UndoManager(null);
+        int[] value = {0};
+
+        for (int i = 0; i <= pipe.gui.Constants.DEFAULT_BUFFER_CAPACITY; i++) {
+            Command edit = new Command() {
+                @Override
+                public void undo() {
+                    value[0]--;
+                }
+
+                @Override
+                public void redo() {
+                    value[0]++;
+                }
+            };
+            edit.redo();
+            undoManager.addNewEdit(edit);
+        }
+
+        undoManager.undoAll();
+        assertEquals(1, value[0]);
+
+        for (int i = 0; i < pipe.gui.Constants.DEFAULT_BUFFER_CAPACITY; i++) {
+            undoManager.redo();
+        }
+
+        assertEquals(pipe.gui.Constants.DEFAULT_BUFFER_CAPACITY + 1, value[0]);
     }
 }
