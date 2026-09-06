@@ -45,6 +45,34 @@ class UndoManagerTest {
     }
 
     @Test
+    void emptyTransactionsDoNotCountAsAppliedEdits() {
+        var undoManager = new UndoManager(null);
+
+        undoManager.newEdit();
+
+        assertTrue(undoManager.currentEditIsEmpty());
+        assertFalse(undoManager.hasAppliedNormalEdits());
+
+        undoManager.removeCurrentEdit();
+
+        assertFalse(undoManager.hasAppliedNormalEdits());
+    }
+
+    @Test
+    void undoDoesNotConsumeAnOlderEditWhenATransactionIsEmpty() {
+        var undoManager = new UndoManager(null);
+        undoManager.addNewEdit(NO_OP);
+        undoManager.undo();
+        undoManager.newEdit();
+
+        undoManager.undo();
+
+        assertFalse(undoManager.hasAppliedNormalEdits());
+        undoManager.redo();
+        assertTrue(undoManager.hasAppliedNormalEdits());
+    }
+
+    @Test
     void truncatedHistoryRemainsChangedAfterAllAvailableEditsAreUndone() {
         var undoManager = new UndoManager(null);
 

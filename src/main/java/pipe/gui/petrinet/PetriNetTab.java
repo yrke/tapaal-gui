@@ -2136,9 +2136,9 @@ public class PetriNetTab extends JSplitPane implements TabActions {
     }
 
 	//Writes a tapaal net to a file, with the posibility to overwrite the quires
-	public void writeNetToFile(File outFile, List<TAPNQuery> queriesOverwrite, TAPNLens lens) {
+	public boolean writeNetToFile(File outFile, List<TAPNQuery> queriesOverwrite, TAPNLens lens) {
+		NetworkMarking currentMarking = null;
 		try {
-			NetworkMarking currentMarking = null;
 			if(isInAnimationMode()){
 				currentMarking = network().marking();
 				network().setMarking(getAnimator().getInitialMarking());
@@ -2154,34 +2154,30 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 
 			tapnWriter.savePNML(outFile);
 
-			if(isInAnimationMode()){
-				network().setMarking(currentMarking);
-			}
+			return true;
 		} catch (Exception e) {
 			Logger.log(e);
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(TAPAALGUI.getApp(), e.toString(),
 					"File Output Error", JOptionPane.ERROR_MESSAGE);
+			return false;
+		} finally {
+			if(isInAnimationMode() && currentMarking != null){
+				network().setMarking(currentMarking);
+			}
 		}
 	}
 
-	public void writeNetToFile(File outFile) {
-		writeNetToFile(outFile, (List<TAPNQuery>) queries(), lens);
+	public boolean writeNetToFile(File outFile) {
+		return writeNetToFile(outFile, (List<TAPNQuery>) queries(), lens);
 	}
 
 	@Override
 	public void saveNet(File outFile) {
-		try {
-			writeNetToFile(outFile);
-
+		if (writeNetToFile(outFile)) {
 			setFile(outFile);
-
 			setNetChanged(false);
 			getUndoManager().clear();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(TAPAALGUI.getApp(), e.toString(), "File Output Error", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
