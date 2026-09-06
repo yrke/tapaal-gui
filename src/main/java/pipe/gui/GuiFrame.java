@@ -17,9 +17,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableRowSorter;
 
 import com.sun.jna.Platform;
 import net.tapaal.gui.*;
@@ -418,13 +423,7 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
     };
     private final GuiAction showShortcuts = new GuiAction("Show shortcuts", "Show the keyboard shortcuts used by TAPAAL") {
         public void actionPerformed(ActionEvent arg0) {
-            JTextArea shortcuts = new JTextArea(getShortcutList());
-            shortcuts.setEditable(false);
-            shortcuts.setCaretPosition(0);
-
-            JScrollPane scrollPane = new JScrollPane(shortcuts);
-            scrollPane.setPreferredSize(new Dimension(520, 420));
-            JOptionPane.showMessageDialog(GuiFrame.this, scrollPane, "Keyboard shortcuts", JOptionPane.INFORMATION_MESSAGE);
+            showShortcutDialog();
         }
     };
     private final GuiAction checkUpdate = new GuiAction("Check for updates", "Check if there is a new version of TAPAAL") {
@@ -874,24 +873,112 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
         return helpMenu;
     }
 
-    private String getShortcutList() {
-        List<String> shortcuts = new ArrayList<>();
+    private void showShortcutDialog() {
+        List<Shortcut> shortcuts = getShortcuts();
+        ShortcutTableModel model = new ShortcutTableModel(shortcuts);
+        JTable table = new JTable(model);
+        table.setAutoCreateRowSorter(true);
+        table.setFillsViewportHeight(true);
+        table.setRowHeight(table.getRowHeight() + 4);
+        table.getColumnModel().getColumn(0).setPreferredWidth(360);
+        table.getColumnModel().getColumn(1).setPreferredWidth(180);
+
+        JTextField searchField = new JTextField();
+        searchField.putClientProperty("JTextField.placeholderText", "Search shortcuts");
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            private void updateFilter() {
+                String searchText = searchField.getText().trim();
+                RowFilter<ShortcutTableModel, Integer> filter = searchText.isEmpty()
+                    ? null
+                    : RowFilter.regexFilter("(?i)" + Pattern.quote(searchText));
+                ((TableRowSorter<ShortcutTableModel>) table.getRowSorter()).setRowFilter(filter);
+            }
+
+            @Override
+            public void insertUpdate(DocumentEvent e) { updateFilter(); }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) { updateFilter(); }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) { updateFilter(); }
+        });
+
+        JPanel searchPanel = new JPanel(new BorderLayout(8, 0));
+        searchPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 8, 0));
+        searchPanel.add(new JLabel("Search:"), BorderLayout.WEST);
+        searchPanel.add(searchField, BorderLayout.CENTER);
+
+        JPanel content = new JPanel(new BorderLayout());
+        content.setBorder(BorderFactory.createEmptyBorder(8, 8, 0, 8));
+        content.add(searchPanel, BorderLayout.NORTH);
+        content.add(new JScrollPane(table), BorderLayout.CENTER);
+        content.setPreferredSize(new Dimension(600, 440));
+
+        JOptionPane.showMessageDialog(GuiFrame.this, content, "Keyboard shortcuts", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private List<Shortcut> getShortcuts() {
+        List<Shortcut> shortcuts = new ArrayList<>();
         for (int i = 0; i < menuBar.getMenuCount(); i++) {
             collectShortcuts(menuBar.getMenu(i), shortcuts);
         }
-        return String.join(System.lineSeparator(), shortcuts);
+        return shortcuts;
     }
 
-    private void collectShortcuts(MenuElement menu, List<String> shortcuts) {
+    private void collectShortcuts(MenuElement menu, List<Shortcut> shortcuts) {
         if (menu instanceof JMenuItem item && !(menu instanceof JMenu)) {
             KeyStroke accelerator = item.getAccelerator();
             if (accelerator != null) {
-                shortcuts.add(item.getText() + "\t" + accelerator);
+                shortcuts.add(new Shortcut(item.getText(), formatShortcut(accelerator)));
             }
         }
 
         for (MenuElement child : menu.getSubElements()) {
             collectShortcuts(child, shortcuts);
+        }
+    }
+
+    private static String formatShortcut(KeyStroke keyStroke) {
+        List<String> modifiers = new ArrayList<>();
+        int mask = keyStroke.getModifiers();
+        if (hasModifier(mask, InputEvent.SHIFT_MASK, InputEvent.SHIFT_DOWN_MASK)) modifiers.add("Shift");
+        if (hasModifier(mask, InputEvent.CTRL_MASK, InputEvent.CTRL_DOWN_MASK)) modifiers.add("Ctrl");
+        if (hasModifier(mask, InputEvent.ALT_MASK, InputEvent.ALT_DOWN_MASK)) modifiers.add("Alt");
+        if (hasModifier(mask, InputEvent.META_MASK, InputEvent.META_DOWN_MASK)) modifiers.add("Meta");
+
+        modifiers.add(KeyEvent.getKeyText(keyStroke.getKeyCode()));
+        return String.join(" + ", modifiers);
+    }
+
+    private static boolean hasModifier(int mask, int legacyMask, int extendedMask) {
+        return (mask & (legacyMask | extendedMask)) != 0;
+    }
+
+    private record Shortcut(String action, String shortcut) { }
+
+    private static final class ShortcutTableModel extends AbstractTableModel {
+        private final List<Shortcut> shortcuts;
+
+        private ShortcutTableModel(List<Shortcut> shortcuts) {
+            this.shortcuts = shortcuts;
+        }
+
+        @Override
+        public int getRowCount() { return shortcuts.size(); }
+
+        @Override
+        public int getColumnCount() { return 2; }
+
+        @Override
+        public String getColumnName(int column) {
+            return column == 0 ? "Action" : "Shortcut";
+        }
+
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            Shortcut shortcut = shortcuts.get(rowIndex);
+            return columnIndex == 0 ? shortcut.action() : shortcut.shortcut();
         }
     }
 
