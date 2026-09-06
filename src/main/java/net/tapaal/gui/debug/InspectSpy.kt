@@ -34,6 +34,42 @@ import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
 import java.util.WeakHashMap
 
+/** Tree renderer that preserves the inspector's compact, readable labels. */
+internal class InspectionTreeCellRenderer(
+    private val changedKeys: () -> Set<String>,
+) : DefaultTreeCellRenderer() {
+    override fun getTreeCellRendererComponent(
+        tree: JTree?,
+        value: Any?,
+        selected: Boolean,
+        expanded: Boolean,
+        leaf: Boolean,
+        row: Int,
+        hasFocus: Boolean,
+    ): Component {
+        val component = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus)
+        val node = (value as? DefaultMutableTreeNode)?.userObject as? InspectionNode
+        if (node != null) {
+            text = node.displayText()
+            if (node.key in changedKeys()) {
+                component.background = Color(255, 241, 168)
+                component.foreground = Color.BLACK
+                (component as? JComponent)?.isOpaque = true
+            }
+        }
+        return component
+    }
+}
+
+/** Expands a tree recursively, including descendants added after the first row. */
+internal fun expandAll(tree: JTree) {
+    var row = 0
+    while (row < tree.rowCount) {
+        tree.expandRow(row)
+        row++
+    }
+}
+
 /** Thin Swing view for a model-backed inspection snapshot. */
 class InspectSpy private constructor(
     private val snapshotProvider: () -> InspectionNode,
@@ -295,7 +331,7 @@ class InspectSpy private constructor(
         } else {
             val pinnedTree = JTree(DefaultTreeModel(toSwingNode(node)))
             pinnedTree.cellRenderer = InspectionTreeCellRenderer { changedKeys }
-            pinnedTree.expandRow(0)
+            expandAll(pinnedTree)
             card.add(JScrollPane(pinnedTree), BorderLayout.CENTER)
         }
         return card
@@ -334,29 +370,6 @@ class InspectSpy private constructor(
         val swingNode = DefaultMutableTreeNode(node)
         node.children.forEach { swingNode.add(toSwingNode(it)) }
         return swingNode
-    }
-
-    private class InspectionTreeCellRenderer(
-        private val changedKeys: () -> Set<String>,
-    ) : DefaultTreeCellRenderer() {
-        override fun getTreeCellRendererComponent(
-            tree: JTree?,
-            value: Any?,
-            selected: Boolean,
-            expanded: Boolean,
-            leaf: Boolean,
-            row: Int,
-            hasFocus: Boolean,
-        ): Component {
-            val component = super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus)
-            val node = (value as? DefaultMutableTreeNode)?.userObject as? InspectionNode
-            if (node != null && node.key in changedKeys()) {
-                component.background = Color(255, 241, 168)
-                component.foreground = Color.BLACK
-                (component as? JComponent)?.isOpaque = true
-            }
-            return component
-        }
     }
 
     companion object {

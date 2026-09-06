@@ -3,6 +3,9 @@ package net.tapaal.gui.debug
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import javax.swing.JLabel
+import javax.swing.JTree
+import javax.swing.tree.DefaultMutableTreeNode
 
 class InspectionStateTest {
     @Test
@@ -43,5 +46,27 @@ class InspectionStateTest {
         assertEquals(setOf("root/notes"), state.expandedKeys())
         assertEquals(listOf("root/transition-fire"), state.pinnedKeys())
         assertTrue(state.pinnedKeys().none { it == "root/place-input" })
+    }
+
+    @Test
+    fun `tree renderer displays the readable node text`() {
+        val node = DefaultMutableTreeNode(InspectionNode("Place", "input", key = "root/place"))
+        val rendered = InspectionTreeCellRenderer { emptySet() }
+            .getTreeCellRendererComponent(JTree(), node, false, false, true, 0, false) as JLabel
+
+        assertEquals("Place: input", rendered.text)
+    }
+
+    @Test
+    fun `expand all opens every pinned descendant`() {
+        val root = DefaultMutableTreeNode("root")
+        val child = DefaultMutableTreeNode("child")
+        child.add(DefaultMutableTreeNode("grandchild"))
+        root.add(child)
+        val tree = JTree(root)
+
+        expandAll(tree)
+
+        assertEquals(3, tree.rowCount)
     }
 }
