@@ -85,9 +85,11 @@ public abstract class TabComponent extends JPanel {
 
 		add(label);
 		label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
+		label.addMouseListener(tabMouseListener);
 
 		JButton button = new TabButton();
 		add(button);
+		addMouseListener(tabMouseListener);
 		setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 	}
 
@@ -103,10 +105,10 @@ public abstract class TabComponent extends JPanel {
 			setBorder(BorderFactory.createEtchedBorder());
 			setBorderPainted(false);
 			addMouseListener(buttonMouseListener);
+			addMouseListener(tabMouseListener);
 			setRolloverEnabled(true);
 			addActionListener(arg0 -> {
-				int index = pane.indexOfTabComponent(TabComponent.this);
-				closeTab((PetriNetTab) pane.getComponentAt(index));
+				closeTab();
 			});
 		}
 
@@ -132,7 +134,23 @@ public abstract class TabComponent extends JPanel {
 
 	}
 
+	private void closeTab() {
+		int index = pane.indexOfTabComponent(TabComponent.this);
+		if (index != -1) {
+			closeTab((PetriNetTab) pane.getComponentAt(index));
+		}
+	}
+
 	protected abstract void closeTab(PetriNetTab tab);
+
+	private final MouseListener tabMouseListener = new MouseAdapter() {
+		@Override
+		public void mouseClicked(MouseEvent e) {
+			if (e.getButton() == MouseEvent.BUTTON2) {
+				closeTab();
+			}
+		}
+	};
 
 	private static final MouseListener buttonMouseListener = new MouseAdapter() {
 		@Override
