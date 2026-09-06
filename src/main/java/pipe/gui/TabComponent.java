@@ -108,6 +108,15 @@ public abstract class TabComponent extends JPanel {
 		// Register the label with Swing's ToolTipManager. The text itself is
 		// supplied dynamically by getToolTipText when the title is clipped.
 		label.setToolTipText("");
+		label.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mousePressed(MouseEvent event) {
+				int index = pane.indexOfTabComponent(TabComponent.this);
+				if (index >= 0) {
+					pane.setSelectedIndex(index);
+				}
+			}
+		});
 		label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
 
 		JButton button = new TabButton();
