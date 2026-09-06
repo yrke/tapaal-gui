@@ -416,9 +416,15 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
             guiFrameController.ifPresent(o -> o.openURL("https://github.com/TAPAAL/TAPAAL/wiki"));
         }
     };
-    private final GuiAction showShortcuts = new GuiAction("Show shortcuts", "Visit the TAPAAL wiki page to find a list of shortcuts") {
+    private final GuiAction showShortcuts = new GuiAction("Show shortcuts", "Show the keyboard shortcuts used by TAPAAL") {
         public void actionPerformed(ActionEvent arg0) {
-            guiFrameController.ifPresent(o -> o.openURL("https://github.com/TAPAAL/TAPAAL/wiki/Shortcut-keys"));
+            JTextArea shortcuts = new JTextArea(getShortcutList());
+            shortcuts.setEditable(false);
+            shortcuts.setCaretPosition(0);
+
+            JScrollPane scrollPane = new JScrollPane(shortcuts);
+            scrollPane.setPreferredSize(new Dimension(520, 420));
+            JOptionPane.showMessageDialog(GuiFrame.this, scrollPane, "Keyboard shortcuts", JOptionPane.INFORMATION_MESSAGE);
         }
     };
     private final GuiAction checkUpdate = new GuiAction("Check for updates", "Check if there is a new version of TAPAAL") {
@@ -866,6 +872,27 @@ public class GuiFrame extends JFrame implements GuiFrameActions, SafeGuiFrameAct
 
         helpMenu.add(showAboutAction);
         return helpMenu;
+    }
+
+    private String getShortcutList() {
+        List<String> shortcuts = new ArrayList<>();
+        for (int i = 0; i < menuBar.getMenuCount(); i++) {
+            collectShortcuts(menuBar.getMenu(i), shortcuts);
+        }
+        return String.join(System.lineSeparator(), shortcuts);
+    }
+
+    private void collectShortcuts(MenuElement menu, List<String> shortcuts) {
+        if (menu instanceof JMenuItem item && !(menu instanceof JMenu)) {
+            KeyStroke accelerator = item.getAccelerator();
+            if (accelerator != null) {
+                shortcuts.add(item.getText() + "\t" + accelerator);
+            }
+        }
+
+        for (MenuElement child : menu.getSubElements()) {
+            collectShortcuts(child, shortcuts);
+        }
     }
 
 
