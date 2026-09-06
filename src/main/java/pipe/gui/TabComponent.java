@@ -60,6 +60,8 @@ import pipe.gui.petrinet.PetriNetTab;
  */
 public abstract class TabComponent extends JPanel {
 
+	private static final int MAX_TAB_TITLE_WIDTH = 200;
+
 	private final JTabbedPane pane;
 
 	public TabComponent(final JTabbedPane pane) {
@@ -80,6 +82,18 @@ public abstract class TabComponent extends JPanel {
 					return pane.getTitleAt(i);
 				}
 				return null;
+			}
+
+			@Override
+			public Dimension getPreferredSize() {
+				Dimension preferredSize = super.getPreferredSize();
+				preferredSize.width = Math.min(preferredSize.width, MAX_TAB_TITLE_WIDTH);
+				return preferredSize;
+			}
+
+			@Override
+			public String getToolTipText(MouseEvent event) {
+				return getText();
 			}
 		};
 
