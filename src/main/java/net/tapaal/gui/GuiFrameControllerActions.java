@@ -4,8 +4,11 @@ import pipe.gui.petrinet.PetriNetTab;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 public interface GuiFrameControllerActions {
+    Optional<PetriNetTab> getCurrentTab();
+
     void openTab(PetriNetTab tab);
     default void openTab(Iterable<PetriNetTab> tabs) {
         tabs.forEach(this::openTab);

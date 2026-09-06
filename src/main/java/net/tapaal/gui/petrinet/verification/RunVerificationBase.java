@@ -1,6 +1,8 @@
 package net.tapaal.gui.petrinet.verification;
 
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
@@ -21,6 +23,7 @@ import dk.aau.cs.model.tapn.TimedArcPetriNetNetwork;
 import dk.aau.cs.model.tapn.simulation.TAPNNetworkTrace;
 import dk.aau.cs.model.tapn.simulation.TimedArcPetriNetTrace;
 import net.tapaal.gui.petrinet.model.QueryMetadataAdapter;
+import pipe.gui.petrinet.PetriNetTab;
 import dk.aau.cs.util.Tuple;
 import dk.aau.cs.util.UnsupportedModelException;
 import dk.aau.cs.verification.VerifyTAPN.ModelReduction;
@@ -30,7 +33,6 @@ import dk.aau.cs.verification.VerificationOptions.AlgorithmOption;
 import dk.aau.cs.verification.VerificationOptions.QueryReductionTime;
 import dk.aau.cs.verification.VerificationOptions.SearchOption;
 import dk.aau.cs.verification.VerificationOptions.TraceOption;
-import pipe.gui.TAPAALGUI;
 import pipe.gui.FileFinder;
 import pipe.gui.MessengerImpl;
 
@@ -244,8 +246,7 @@ public abstract class RunVerificationBase extends SwingWorker<VerificationResult
                     reductionTime = dataLayerQuery.isQueryReductionEnabled() ? QueryReductionTime.UnlimitedTime : QueryReductionTime.NoTime;
                 }
 			    options = new VerifyPNOptions(options.extraTokens(), TraceOption.NONE, SearchOption.BFS, false, ModelReduction.BOUNDPRESERVING, false, false, 1, TAPNQuery.QueryCategory.CTL, AlgorithmOption.CERTAIN_ZERO, false, reductionTime, false, null, false, false, false, false, false, false, false, options.useExplicitSearch());
-                // XXX: needs refactoring, will only work if the model verified in the one on top (using getCurrentTab)
-                KBoundAnalyzer optimizer = new KBoundAnalyzer(model, TAPAALGUI.getCurrentTab().lens, guiModels, options.extraTokens(), modelChecker, new MessengerImpl(), spinner, dataLayerQuery);
+				KBoundAnalyzer optimizer = new KBoundAnalyzer(model, lens, guiModels, options.extraTokens(), modelChecker, new MessengerImpl(), spinner, dataLayerQuery);
                 optimizer.analyze((VerifyTAPNOptions) options, true);
             }
             if (result.getQueryResult() != null && result.getQueryResult().isQuerySatisfied() && result.getTrace() != null) {
@@ -264,8 +265,21 @@ public abstract class RunVerificationBase extends SwingWorker<VerificationResult
 		//The invoke later will make sure all the verification is finished before showing the error
 		SwingUtilities.invokeLater(() -> {
 			messenger.displayErrorMessage("The engine selected in the query dialog cannot verify this model.\nPlease choose another engine.\n" + error);
-			TAPAALGUI.getCurrentTab().editSelectedQuery();
+			getOwnerTab().ifPresent(tab -> tab.editSelectedQuery());
 		});
+	}
+
+	protected Optional<PetriNetTab> getOwnerTab() {
+		if (guiModel != null && guiModel.getOwnerTab() != null) {
+			return Optional.of(guiModel.getOwnerTab());
+		}
+		if (guiModels == null) {
+			return Optional.empty();
+		}
+		return guiModels.values().stream()
+			.map(DataLayer::getOwnerTab)
+			.filter(Objects::nonNull)
+			.findFirst();
 	}
 
 	protected abstract boolean showResult(VerificationResult<TAPNNetworkTrace> result);

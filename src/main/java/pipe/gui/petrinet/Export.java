@@ -299,7 +299,7 @@ public class Export {
 
                     filename = FileBrowser.constructor("TikZ figure", "tex", filename).saveFile();
                     if (filename != null) {
-                        TikZExporter output = new TikZExporter(model, filename, tikZOption);
+                        TikZExporter output = new TikZExporter(model, filename, tikZOption, tab);
                         output.ExportToTikZ();
                     }
                     break;

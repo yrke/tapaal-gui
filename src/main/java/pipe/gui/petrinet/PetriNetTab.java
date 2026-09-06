@@ -504,13 +504,16 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 
         for (Template template : templates) {
 			documentSession.register(template);
+			template.guiModel().setOwnerTab(this);
 
             for(PetriNetObject o : template.guiModel().getPetriNetObjects()){
                 o.setLens(this.lens);
             }
         }
 
-        drawingSurface = new DrawingSurfaceImpl(new DataLayer(), this, managerRef);
+        DataLayer drawingModel = new DataLayer();
+        drawingModel.setOwnerTab(this);
+        drawingSurface = new DrawingSurfaceImpl(drawingModel, this, managerRef);
         drawingSurfaceScroller = new JScrollPane(drawingSurface);
         // make it less bad on XP
         drawingSurfaceScroller.setBorder(new BevelBorder(BevelBorder.LOWERED));
@@ -850,7 +853,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 
 	public void addAbstractAnimationPane() {
 		animationControlsPanel.remove(animationHistorySidePanel);
-		abstractAnimationPane = new AnimationHistoryList();
+		abstractAnimationPane = new AnimationHistoryList(this);
 
 		JScrollPane untimedAnimationHistoryScrollPane = new JScrollPane(abstractAnimationPane);
 		untimedAnimationHistoryScrollPane.setBorder(
@@ -929,6 +932,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 	}
 
 	public void addTemplate(Template template) {
+		template.guiModel().setOwnerTab(this);
 		documentSession.add(template);
 		templateExplorer.updateTemplateList();
 	}
@@ -1332,8 +1336,9 @@ public class PetriNetTab extends JSplitPane implements TabActions {
 		simulatorModelRoot = model;
 	}
 
-    public void changeToTemplate(Template tapn) {
+	public void changeToTemplate(Template tapn) {
 		Require.notNull(tapn, "Can't change to a Template that is null");
+		tapn.guiModel().setOwnerTab(this);
 
         nameGenerator.add(tapn.model());
         drawingSurface.setModel(tapn.guiModel(), tapn.zoomer());
@@ -1568,7 +1573,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
     @Override
     public void showColorTypesVariables() {
         StringBuilder buffer = new StringBuilder();
-        Context context = new Context(TAPAALGUI.getCurrentTab());
+        Context context = new Context(this);
 
         List<ColorType> listColorTypes = context.network().colorTypes();
         List<Variable> variableList = context.network().variables();
@@ -2941,7 +2946,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
                     rotation = e.getWheelRotation() * 45;
                 }
 
-                TAPAALGUI.getCurrentTab().getUndoManager().addNewEdit(((Transition) p).rotate(rotation));
+                getUndoManager().addNewEdit(((Transition) p).rotate(rotation));
             } else {
                 p.getParent().dispatchEvent(e);
             }
@@ -2965,7 +2970,7 @@ public class PetriNetTab extends JSplitPane implements TabActions {
         }
 
         private void arcDoubleClickedWithContrl(Arc arc, MouseEvent e) {
-            TAPAALGUI.getCurrentTab().getUndoManager().addNewEdit(
+            getUndoManager().addNewEdit(
                 arc.getArcPath().insertPoint(
                     new Point2D.Double(
                         Zoomer.getUnzoomedValue(arc.getX() + e.getX(), arc.getZoom()),

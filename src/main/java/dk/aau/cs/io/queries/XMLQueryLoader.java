@@ -42,6 +42,7 @@ public class XMLQueryLoader extends QueryLoader{
 
     private final File file;
     private final List<QueryCategory> queryCategories;
+    private final PetriNetTab tab;
     private final ArrayList<QueryWrapper> faultyQueries = new ArrayList<QueryWrapper>();
 
     public XMLQueryLoader(File file, TimedArcPetriNetNetwork network){
@@ -53,9 +54,14 @@ public class XMLQueryLoader extends QueryLoader{
 	}
 
     public XMLQueryLoader(File file, TimedArcPetriNetNetwork network, List<QueryCategory> queryCategories, boolean isColored){
+		this(file, network, queryCategories, isColored, null);
+	}
+
+    public XMLQueryLoader(File file, TimedArcPetriNetNetwork network, List<QueryCategory> queryCategories, boolean isColored, PetriNetTab tab){
 		super(network, isColored);
         this.file = file;
         this.queryCategories = queryCategories;
+        this.tab = tab;
     }
 
     @Override
@@ -105,7 +111,7 @@ public class XMLQueryLoader extends QueryLoader{
             // Save query for later use in dialog window
             this.faultyQueries.add(queryWrapper);
 
-            TAPNLens lens = TAPAALGUI.getCurrentTab().getLens();
+            TAPNLens lens = tab == null ? null : tab.getLens();
             boolean isTimed = (lens != null && lens.isTimed()) || network.isTimed();
             boolean isKnownGame = (lens != null && lens.isGame()); // XXX: This is a hack, not sure why network does not know if it a game, also control tag should used to check if query is a game
             boolean isStochastic = (lens != null && lens.isStochastic());
@@ -307,7 +313,7 @@ public class XMLQueryLoader extends QueryLoader{
     }
 
     public static void importQueries(File file, TimedArcPetriNetNetwork network, PetriNetTab tab){
-		XMLQueryLoader loader = new XMLQueryLoader(file, network, null, tab.getLens().isColored());
+		XMLQueryLoader loader = new XMLQueryLoader(file, network, null, tab.getLens().isColored(), tab);
 
         // Suppress default error message
         loader.showErrorMessage = false;

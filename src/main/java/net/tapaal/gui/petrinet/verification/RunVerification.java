@@ -14,6 +14,7 @@ import dk.aau.cs.verification.VerifyTAPN.ColorBindingParser;
 import dk.aau.cs.verification.VerificationOptions.TraceOption;
 import net.tapaal.swinghelpers.GridBagHelper;
 import pipe.gui.TAPAALGUI;
+import pipe.gui.petrinet.animation.Animator;
 import pipe.gui.petrinet.PetriNetTab;
 import pipe.gui.petrinet.dataLayer.DataLayer;
 
@@ -82,17 +83,19 @@ public class RunVerification extends RunVerificationBase {
                 }
 
                 if ((options.traceOption() != TraceOption.NONE || (lens != null && lens.isStochastic() && options.isSimulate())) && isNetDrawable) {
-                    if (!reducedNetOpened && nonNull(result.getTrace()) && nonNull(TAPAALGUI.getAnimator())) {
+                    PetriNetTab tab = getOwnerTab().orElse(null);
+                    if (!reducedNetOpened && nonNull(result.getTrace()) && nonNull(tab)) {
                         if (((lens != null && lens.isColored()) || model.isColored()) && !options.useExplicitSearch()) {
                             int dialogResult = JOptionPane.showConfirmDialog(TAPAALGUI.getApp(), "There is a trace that will be displayed in a new tab on the unfolded net/query.", "Open trace", JOptionPane.OK_CANCEL_OPTION);
                             if (dialogResult == JOptionPane.OK_OPTION) {
-                                TAPAALGUI.openNewTabFromStream(result.getUnfoldedTab());
+                                tab = TAPAALGUI.openNewTabFromStream(result.getUnfoldedTab());
                             } else return false;
                         }
+                        Animator animator = tab.getAnimator();
                         if (result.getTraceMap() == null) {
-                            TAPAALGUI.getAnimator().setTrace(result.getTrace());
+                            animator.setTrace(result.getTrace());
                         } else if (lens != null && lens.isStochastic() && options.isSimulate()) {
-                            TAPAALGUI.getAnimator().setTrace(result.getTrace(), result.getTraceMap());
+                            animator.setTrace(result.getTrace(), result.getTraceMap());
                         } else {
                             Map<String, TAPNNetworkTrace> traceMap = new HashMap<>();
                             for (String key : result.getTraceMap().keySet()) {
@@ -100,7 +103,7 @@ public class RunVerification extends RunVerificationBase {
                                     traceMap.put(key, result.getTraceMap().get(key));
                                 }
                             }
-                            TAPAALGUI.getAnimator().setTrace(result.getTrace(), traceMap);
+                            animator.setTrace(result.getTrace(), traceMap);
                         }
                     } else {
                         if ((
@@ -301,7 +304,8 @@ public class RunVerification extends RunVerificationBase {
                                 //Ensure that a net was created by the query reduction
                                 if(reducedNetTab.currentTemplate().guiModel().getPlaces().length > 0
                                     || reducedNetTab.currentTemplate().guiModel().getTransitions().length > 0){
-                                    reducedNetTab.setInitialName("reduced-" + TAPAALGUI.getAppGui().getCurrentTabName());
+                                    String sourceTabName = getOwnerTab().map(PetriNetTab::getTabTitle).orElse("");
+                                    reducedNetTab.setInitialName("reduced-" + sourceTabName);
                                     TAPNQuery convertedQuery = dataLayerQuery.convertPropertyForReducedNet(reducedNetTab.currentTemplate().toString());
                                     reducedNetTab.addQuery(convertedQuery);
                                     TAPAALGUI.openNewTabFromStream(reducedNetTab);

@@ -90,6 +90,10 @@ public class Animator {
         this.tab = tab;
     }
 
+    public PetriNetTab getTab() {
+        return tab;
+    }
+
     public void initializeInteractiveEngine() {
         if (!tab.getLens().isColored()) return;
 

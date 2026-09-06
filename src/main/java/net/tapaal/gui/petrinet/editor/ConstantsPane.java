@@ -719,14 +719,14 @@ public class ConstantsPane extends JPanel implements SidePane {
 	}
 
 	private void showEditConstantDialog(Constant constant) {
-		ConstantsDialogPanel panel = new ConstantsDialogPanel(tab.network(), constant);
+		ConstantsDialogPanel panel = new ConstantsDialogPanel(tab.network(), constant, tab);
 
 		panel.showDialog();
 		showConstants();
 	}
 
 	private void showEditRealConstantDialog(RealConstant constant) {
-		var panel = new ConstantsDialogPanel(tab.network(), constant);
+		var panel = new ConstantsDialogPanel(tab.network(), constant, tab);
 
 		panel.showDialog();
 		showConstants();
@@ -761,7 +761,7 @@ public class ConstantsPane extends JPanel implements SidePane {
 
     private void showEditManuallyDialog() {
         var undoManager = tab.getUndoManager();
-        var panel = new ManuallyEditDialogPanel(colorTypesListModel, variablesListModel, constantsListModel, tab.network(), undoManager, tab.getLens());
+        var panel = new ManuallyEditDialogPanel(colorTypesListModel, variablesListModel, constantsListModel, tab.network(), undoManager, tab.getLens(), tab);
         panel.showDialog();
     }
 

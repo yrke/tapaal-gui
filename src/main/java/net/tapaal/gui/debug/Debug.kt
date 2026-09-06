@@ -38,7 +38,7 @@ object DEBUG {
                 KeyStroke.getKeyStroke('L'.code, Toolkit.getDefaultToolkit().menuShortcutKeyMask + InputEvent.SHIFT_MASK)
             ) {
                 override fun actionPerformed(e: ActionEvent?) {
-                    val tab = TAPAALGUI.getCurrentTab();
+                    val tab = TAPAALGUI.getAppGuiController().getCurrentTab().orElseThrow();
                     val tmpFile = kotlin.io.path.createTempFile("tapaalSaveTest", ".tapn").toFile()
                     tab.writeNetToFile(tmpFile)
 

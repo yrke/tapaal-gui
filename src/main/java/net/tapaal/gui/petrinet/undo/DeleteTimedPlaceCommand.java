@@ -6,7 +6,6 @@ import java.util.HashMap;
 
 import pipe.gui.petrinet.dataLayer.DataLayer;
 import net.tapaal.gui.petrinet.verification.TAPNQuery;
-import pipe.gui.TAPAALGUI;
 import pipe.gui.petrinet.graphicElements.tapn.TimedPlaceComponent;
 import dk.aau.cs.model.tapn.TimedArcPetriNet;
 import dk.aau.cs.model.tapn.TimedPlace;
@@ -23,7 +22,7 @@ public class DeleteTimedPlaceCommand extends TAPNElementCommand {
 	private final HashMap<TAPNQuery, List<Observation>> observationsInQuery = new HashMap<TAPNQuery, List<Observation>>();
 
 	public DeleteTimedPlaceCommand(TimedPlaceComponent timedPlaceComponent, TimedArcPetriNet tapn, DataLayer guiModel) {
-		this(timedPlaceComponent, tapn, guiModel, TAPAALGUI.getCurrentTab().queries());
+		this(timedPlaceComponent, tapn, guiModel, guiModel.getOwnerTab().queries());
 	}
 
 	public DeleteTimedPlaceCommand(TimedPlaceComponent timedPlaceComponent, TimedArcPetriNet tapn, DataLayer guiModel, Iterable<TAPNQuery> queries) {

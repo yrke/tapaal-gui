@@ -4,6 +4,7 @@ import java.util.*;
 
 import dk.aau.cs.util.RequireException;
 import pipe.gui.canvas.Canvas;
+import pipe.gui.petrinet.PetriNetTab;
 import pipe.gui.petrinet.graphicElements.*;
 import pipe.gui.petrinet.graphicElements.tapn.TimedInhibitorArcComponent;
 import pipe.gui.petrinet.graphicElements.tapn.TimedInputArcComponent;
@@ -17,6 +18,16 @@ import dk.aau.cs.util.Require;
 
 
 public class DataLayer {
+
+	private PetriNetTab ownerTab;
+
+	public void setOwnerTab(PetriNetTab ownerTab) {
+		this.ownerTab = ownerTab;
+	}
+
+	public PetriNetTab getOwnerTab() {
+		return ownerTab;
+	}
 
 
 	//XXX: Temp solution while refactoring, should be changed to interface to now allow to many actions

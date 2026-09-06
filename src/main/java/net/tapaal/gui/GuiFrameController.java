@@ -35,6 +35,7 @@ import java.lang.UnsupportedOperationException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 public final class GuiFrameController implements GuiFrameControllerActions{
 
@@ -42,7 +43,7 @@ public final class GuiFrameController implements GuiFrameControllerActions{
     final GuiFrameActions guiFrame;
     private final ArrayList<PetriNetTab> tabs = new ArrayList<>();
 
-    final MutableReference<TabActions> currentTab = new MutableReference<>();
+    private final MutableReference<PetriNetTab> currentTab = new MutableReference<>();
 
     public GuiFrameController(GuiFrame appGui) {
         super();
@@ -51,7 +52,8 @@ public final class GuiFrameController implements GuiFrameControllerActions{
         guiFrameDirectAccess = appGui;
 
         loadPreferences();
-        appGui.registerController(this, currentTab);
+        SimulationControl.setCurrentTabProvider(this::getCurrentTab);
+        appGui.registerController(this);
     }
 
     //XXX should be private and should prop. live in controllers not GUI, tmp while refactoring //kyrke 2019-11-05
@@ -68,6 +70,11 @@ public final class GuiFrameController implements GuiFrameControllerActions{
 
     public List<PetriNetTab> getTabs() {
         return Collections.unmodifiableList(tabs);
+    }
+
+    @Override
+    public Optional<PetriNetTab> getCurrentTab() {
+        return currentTab.map(tab -> tab);
     }
 
     private void loadPreferences() {
@@ -152,6 +159,12 @@ public final class GuiFrameController implements GuiFrameControllerActions{
                 //Close the gui part first, else we get an error bug #826578
                 guiFrame.detachTabFromGuiFrame(tab);
                 tabs.remove(tab);
+
+                if (currentTab.get() == tab) {
+                    tab.setApp(null);
+                    currentTab.setReference(null);
+                    guiFrame.setTitle(null);
+                }
             }
         }
 
@@ -336,7 +349,7 @@ public final class GuiFrameController implements GuiFrameControllerActions{
                         if (tab.network().paintNet() && !tab.currentTemplate().getHasPositionalInfo() && (tab.currentTemplate().guiModel().getPlaces().length + tab.currentTemplate().guiModel().getTransitions().length) > 0) {
                             int dialogResult = JOptionPane.showConfirmDialog (TAPAALGUI.getApp(), "The net does not have any layout information. Would you like to do automatic layout?","Automatic Layout?", JOptionPane.YES_NO_OPTION);
                             if(dialogResult == JOptionPane.YES_OPTION) {
-                                SmartDrawDialog.showSmartDrawDialog();
+                                SmartDrawDialog.showSmartDrawDialog(tab);
                             }
                         }
                     }
@@ -424,7 +437,7 @@ public final class GuiFrameController implements GuiFrameControllerActions{
                         if(tab.network().paintNet() && !tab.currentTemplate().getHasPositionalInfo() && (tab.currentTemplate().guiModel().getPlaces().length + tab.currentTemplate().guiModel().getTransitions().length) > 0) {
                             int dialogResult = JOptionPane.showConfirmDialog (TAPAALGUI.getApp(), "The net does not have any layout information. Would you like to do automatic layout?","Automatic Layout?", JOptionPane.YES_NO_OPTION);
                             if(dialogResult == JOptionPane.YES_OPTION) {
-                                SmartDrawDialog.showSmartDrawDialog();
+                                SmartDrawDialog.showSmartDrawDialog(tab);
                             }
                         }
                     }

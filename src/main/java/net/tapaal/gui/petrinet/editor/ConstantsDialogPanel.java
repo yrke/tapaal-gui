@@ -30,6 +30,7 @@ import net.tapaal.swinghelpers.CustomJSpinner;
 import net.tapaal.swinghelpers.RequestFocusListener;
 import net.tapaal.swinghelpers.SwingHelper;
 import pipe.gui.TAPAALGUI;
+import pipe.gui.petrinet.PetriNetTab;
 import net.tapaal.gui.petrinet.undo.Command;
 import net.tapaal.gui.petrinet.model.NetworkEditService;
 import dk.aau.cs.model.tapn.Constant;
@@ -46,6 +47,7 @@ public class ConstantsDialogPanel extends JPanel {
     private final TimedArcPetriNetNetwork model;
     private final NetworkEditService editService;
     private final Type type;
+    private final PetriNetTab tab;
     private int lowerBound;
     private int upperBound;
     private EscapableDialog dialog;
@@ -81,9 +83,10 @@ public class ConstantsDialogPanel extends JPanel {
 
     private final String oldName;
 
-    public ConstantsDialogPanel(TimedArcPetriNetNetwork model, Constant constant) {
+    public ConstantsDialogPanel(TimedArcPetriNetNetwork model, Constant constant, PetriNetTab tab) {
         this.model = model;
-        this.editService = new NetworkEditService(model, () -> TAPAALGUI.getCurrentTab().updateConstantsList());
+        this.tab = tab;
+        this.editService = new NetworkEditService(model, tab::updateConstantsList);
         this.type = Type.INT;
         listModel = new DefaultListModel<>();
 
@@ -108,9 +111,10 @@ public class ConstantsDialogPanel extends JPanel {
         }
     }
 
-    public ConstantsDialogPanel(TimedArcPetriNetNetwork model, RealConstant constant) {
+    public ConstantsDialogPanel(TimedArcPetriNetNetwork model, RealConstant constant, PetriNetTab tab) {
         this.model = model;
-        this.editService = new NetworkEditService(model, () -> TAPAALGUI.getCurrentTab().updateConstantsList());
+        this.tab = tab;
+        this.editService = new NetworkEditService(model, tab::updateConstantsList);
         this.type = Type.REAL;
         listModel = new DefaultListModel<>();
 
@@ -599,8 +603,8 @@ public class ConstantsDialogPanel extends JPanel {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 } else {
-                    TAPAALGUI.getCurrentTab().getUndoManager().addNewEdit(edit);
-                    TAPAALGUI.getCurrentTab().drawingSurface().repaintAll();
+                    tab.getUndoManager().addNewEdit(edit);
+                    tab.drawingSurface().repaintAll();
                     exit();
                 }
             } else {
@@ -615,7 +619,7 @@ public class ConstantsDialogPanel extends JPanel {
                     nameTextField.requestFocusInWindow();
                     return;
                 } else {
-                    TAPAALGUI.getCurrentTab().getUndoManager().addNewEdit(edit);
+                    tab.getUndoManager().addNewEdit(edit);
                 }
                 exit();
             }
@@ -650,8 +654,8 @@ public class ConstantsDialogPanel extends JPanel {
                     return;
                 }
 
-                TAPAALGUI.getCurrentTab().getUndoManager().addNewEdit(edit);
-                TAPAALGUI.getCurrentTab().drawingSurface().repaintAll();
+                tab.getUndoManager().addNewEdit(edit);
+                tab.drawingSurface().repaintAll();
                 exit();
             } else {
                 Command edit = editService.addRealConstant(newName, vals);
@@ -666,7 +670,7 @@ public class ConstantsDialogPanel extends JPanel {
                     return;
                 }
 
-                TAPAALGUI.getCurrentTab().getUndoManager().addNewEdit(edit);
+                tab.getUndoManager().addNewEdit(edit);
                 exit();
             }
         }

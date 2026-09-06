@@ -2,6 +2,7 @@ package pipe.gui.petrinet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Point;
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import net.tapaal.gui.petrinet.Template;
+import net.tapaal.gui.GuiFrameController;
+import pipe.gui.GuiFrame;
 import pipe.gui.petrinet.graphicElements.tapn.TimedPlaceComponent;
 
 @Tag("gui")
@@ -54,6 +57,26 @@ class PetriNetTabSmokeTest {
             tab.getUndoManager().undo();
             assertEquals(1, template.model().places().size());
             assertEquals(1, template.guiModel().getPlaces().length);
+        });
+    }
+
+    @Test
+    void controllerOwnsCurrentTabSelectionAndTabModelsKnowTheirOwner() throws Exception {
+        SwingUtilities.invokeAndWait(() -> {
+            GuiFrame frame = new GuiFrame("test");
+            GuiFrameController controller = new GuiFrameController(frame);
+            PetriNetTab tab = PetriNetTab.createNewEmptyTab("owner.tapn", true, false, false, false);
+
+            assertTrue(controller.getCurrentTab().isEmpty());
+            controller.openTab(tab);
+
+            assertEquals(tab, controller.getCurrentTab().orElseThrow());
+            assertEquals(tab, tab.getModel().getOwnerTab());
+            assertEquals(tab, tab.currentTemplate().guiModel().getOwnerTab());
+
+            controller.closeTab(tab);
+            assertTrue(controller.getCurrentTab().isEmpty());
+            frame.dispose();
         });
     }
 }

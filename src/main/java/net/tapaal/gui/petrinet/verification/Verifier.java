@@ -6,6 +6,7 @@ import javax.swing.JSpinner;
 import com.sun.jna.Platform;
 
 import net.tapaal.gui.petrinet.TAPNLens;
+import pipe.gui.petrinet.PetriNetTab;
 import net.tapaal.gui.petrinet.model.QueryMetadataAdapter;
 import net.tapaal.gui.petrinet.smartdraw.SmartDrawDialog;
 import dk.aau.cs.model.tapn.TAPNQuery.QueryCategory;
@@ -25,6 +26,7 @@ import dk.aau.cs.verification.UPPAAL.UppaalIconSelector;
 import dk.aau.cs.verification.UPPAAL.Verifyta;
 import dk.aau.cs.verification.UPPAAL.VerifytaOptions;
 import java.util.HashMap;
+import java.util.Objects;
 import java.io.File;
 import java.io.IOException;
 
@@ -190,6 +192,10 @@ public class Verifier {
 
 
     public static void runUppaalVerification(TimedArcPetriNetNetwork timedArcPetriNetNetwork, TAPNQuery input) {
+        runUppaalVerification(timedArcPetriNetNetwork, input, null);
+    }
+
+    public static void runUppaalVerification(TimedArcPetriNetNetwork timedArcPetriNetNetwork, TAPNQuery input, PetriNetTab tab) {
         Verifyta verifyta = getVerifyta();
         if (!verifyta.isCorrectVersion()) {
             System.err.println("Verifyta not found, or you are running an old version of Verifyta.\n"
@@ -219,7 +225,7 @@ public class Verifier {
             RunVerificationBase thread = new RunVerification(verifyta, new UppaalIconSelector(), new MessengerImpl());
             RunningVerificationDialog dialog = new RunningVerificationDialog(TAPAALGUI.getApp(), thread);
             if(timedArcPetriNetNetwork.isColored() && input.getTraceOption() != TAPNQuery.TraceOption.NONE){
-                SmartDrawDialog.setupWorkerListener(thread);
+                SmartDrawDialog.setupWorkerListener(thread, tab);
             }
             thread.execute(
                 verifytaOptions,
@@ -278,7 +284,7 @@ public class Verifier {
 
             RunningVerificationDialog dialog = new RunningVerificationDialog(TAPAALGUI.getApp(), thread);
             if (isColored && query.getTraceOption() != TAPNQuery.TraceOption.NONE) {
-                SmartDrawDialog.setupWorkerListener(thread);
+                SmartDrawDialog.setupWorkerListener(thread, ownerTab(guiModels));
             }
             thread.execute(verifytapnOptions, tapnNetwork, new dk.aau.cs.model.tapn.TAPNQuery(query.getProperty(), query.getCapacity(), query.getSmcSettings()), query, lens);
             dialog.setVisible(true);
@@ -427,7 +433,7 @@ public class Verifier {
             }
 
             if (isColored && query.getTraceOption() != TAPNQuery.TraceOption.NONE) {
-                SmartDrawDialog.setupWorkerListener(thread);
+                SmartDrawDialog.setupWorkerListener(thread, ownerTab(guiModels));
             }
             thread.execute(verifytapnOptions, tapnNetwork, new dk.aau.cs.model.tapn.TAPNQuery(query.getProperty(), query.getCapacity(), query.getSmcSettings()), query, lens);
             return thread;
@@ -438,6 +444,17 @@ public class Verifier {
         }
 
         return null;
+    }
+
+    private static PetriNetTab ownerTab(HashMap<TimedArcPetriNet, DataLayer> guiModels) {
+        if (guiModels == null) {
+            return null;
+        }
+        return guiModels.values().stream()
+            .map(DataLayer::getOwnerTab)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElse(null);
     }
 
 }
