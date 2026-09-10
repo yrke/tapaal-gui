@@ -114,6 +114,7 @@ public abstract class TabComponent extends JPanel {
 				int index = pane.indexOfTabComponent(TabComponent.this);
 				if (index >= 0) {
 					pane.setSelectedIndex(index);
+					pane.requestFocusInWindow();
 				}
 			}
 		});
